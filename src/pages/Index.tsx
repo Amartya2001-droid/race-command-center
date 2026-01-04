@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useTelemetryStream } from '@/hooks/useTelemetryStream';
+import { useRaceRecording } from '@/hooks/useRaceRecording';
 import { RaceHeader } from '@/components/dashboard/RaceHeader';
 import { DriverCard } from '@/components/dashboard/DriverCard';
 import { IncidentLog } from '@/components/dashboard/IncidentLog';
 import { SystemHealthPanel } from '@/components/dashboard/SystemHealthPanel';
 import { ControlPanel } from '@/components/dashboard/ControlPanel';
 import { ArchitectureDiagram } from '@/components/dashboard/ArchitectureDiagram';
+import { ReplayControls } from '@/components/dashboard/ReplayControls';
+import { ReplayMode } from '@/components/dashboard/ReplayMode';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, GitBranch, Users } from 'lucide-react';
@@ -21,7 +24,27 @@ const Index = () => {
     clearAnomalies 
   } = useTelemetryStream(150);
 
+  const {
+    replayState,
+    currentSnapshot,
+    startRecording,
+    stopRecording,
+    startPlayback,
+    pausePlayback,
+    seekToIndex,
+    seekToIncident,
+    setPlaybackSpeed,
+    clearSession
+  } = useRaceRecording({
+    drivers,
+    anomalies,
+    systemHealth,
+    raceInfo,
+    isPaused
+  });
+
   const [selectedTab, setSelectedTab] = useState('telemetry');
+  const [showReplayMode, setShowReplayMode] = useState(false);
 
   // Get drivers with active anomalies
   const driversWithAnomalies = new Set(
@@ -29,6 +52,37 @@ const Index = () => {
       .filter(a => Date.now() - a.timestamp.getTime() < 5000)
       .map(a => a.driverId)
   );
+
+  // Handle entering replay mode
+  const handleEnterReplayMode = () => {
+    if (replayState.session) {
+      setShowReplayMode(true);
+    }
+  };
+
+  const handleExitReplayMode = () => {
+    setShowReplayMode(false);
+    pausePlayback();
+  };
+
+  // Show replay mode if active
+  if (showReplayMode && replayState.session) {
+    return (
+      <ReplayMode
+        session={replayState.session}
+        currentSnapshot={currentSnapshot}
+        currentIndex={replayState.currentIndex}
+        isPlaying={replayState.isPlaying}
+        playbackSpeed={replayState.playbackSpeed}
+        onSeek={seekToIndex}
+        onSeekToIncident={seekToIncident}
+        onPlay={startPlayback}
+        onPause={pausePlayback}
+        onSetSpeed={setPlaybackSpeed}
+        onExitReplay={handleExitReplayMode}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -52,10 +106,26 @@ const Index = () => {
                 </TabsTrigger>
               </TabsList>
 
-              <ControlPanel 
-                isPaused={isPaused} 
-                onTogglePause={togglePause} 
-              />
+              <div className="flex items-center gap-3">
+                {/* Replay Controls */}
+                <ReplayControls
+                  isRecording={replayState.isRecording}
+                  hasSession={!!replayState.session}
+                  onStartRecording={startRecording}
+                  onStopRecording={stopRecording}
+                  onEnterReplayMode={handleEnterReplayMode}
+                  onClearSession={clearSession}
+                  snapshotCount={replayState.session?.snapshots.length}
+                  incidentCount={replayState.session?.incidents.length}
+                />
+
+                <div className="w-px h-6 bg-border" />
+
+                <ControlPanel 
+                  isPaused={isPaused} 
+                  onTogglePause={togglePause} 
+                />
+              </div>
             </div>
 
             <TabsContent value="telemetry" className="flex-1 m-0 overflow-hidden">
@@ -66,6 +136,11 @@ const Index = () => {
                     <h2 className="font-orbitron text-sm font-semibold text-muted-foreground flex items-center gap-2">
                       <Users className="w-4 h-4" />
                       LIVE TELEMETRY - ALL DRIVERS
+                      {replayState.isRecording && (
+                        <span className="ml-2 px-2 py-0.5 bg-critical/20 rounded text-critical text-xs animate-pulse">
+                          ● RECORDING
+                        </span>
+                      )}
                     </h2>
                     {drivers.slice(0, 5).map(driver => (
                       <DriverCard 
