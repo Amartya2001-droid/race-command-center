@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTelemetryStream } from '@/hooks/useTelemetryStream';
 import { useRaceRecording } from '@/hooks/useRaceRecording';
+import { useRiskPrediction } from '@/hooks/useRiskPrediction';
 import { RaceHeader } from '@/components/dashboard/RaceHeader';
 import { DriverCard } from '@/components/dashboard/DriverCard';
 import { IncidentLog } from '@/components/dashboard/IncidentLog';
@@ -9,6 +10,7 @@ import { ControlPanel } from '@/components/dashboard/ControlPanel';
 import { ArchitectureDiagram } from '@/components/dashboard/ArchitectureDiagram';
 import { ReplayControls } from '@/components/dashboard/ReplayControls';
 import { ReplayMode } from '@/components/dashboard/ReplayMode';
+import { AIRiskPanel } from '@/components/dashboard/AIRiskPanel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, GitBranch, Users } from 'lucide-react';
@@ -45,6 +47,14 @@ const Index = () => {
 
   const [selectedTab, setSelectedTab] = useState('telemetry');
   const [showReplayMode, setShowReplayMode] = useState(false);
+
+  // AI Risk Prediction
+  const riskAnalysis = useRiskPrediction({
+    drivers,
+    raceInfo,
+    enabled: !isPaused && !showReplayMode,
+    updateInterval: 15000 // 15 seconds between AI calls
+  });
 
   // Get drivers with active anomalies
   const driversWithAnomalies = new Set(
@@ -211,11 +221,22 @@ const Index = () => {
           </Tabs>
         </div>
 
-        {/* Right Panel - Incidents & Health */}
-        <div className="w-80 border-l border-border flex flex-col bg-card/30">
+        {/* Right Panel - AI Risk, Incidents & Health */}
+        <div className="w-96 border-l border-border flex flex-col bg-card/30">
+          {/* AI Risk Panel */}
+          <div className="h-1/2 border-b border-border">
+            <AIRiskPanel 
+              analysis={riskAnalysis} 
+              onRefresh={riskAnalysis.refreshNow} 
+            />
+          </div>
+          
+          {/* Incident Log */}
           <div className="flex-1 min-h-0">
             <IncidentLog anomalies={anomalies} onClear={clearAnomalies} />
           </div>
+          
+          {/* System Health */}
           <div className="border-t border-border">
             <SystemHealthPanel health={systemHealth} />
           </div>
