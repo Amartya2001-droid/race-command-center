@@ -98,12 +98,13 @@ Analyze for predictive risks and provide decision support.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_completion_tokens: 1000,
+        temperature: 0.3,
+        max_tokens: 1000,
         response_format: { type: "json_object" }
       }),
     });
@@ -111,17 +112,24 @@ Analyze for predictive risks and provide decision support.`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
-    console.log('AI analysis complete');
+    console.log('OpenAI response received:', JSON.stringify(data).slice(0, 500));
+    
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      console.error('Empty content in response:', JSON.stringify(data));
+      throw new Error('Empty response from AI');
+    }
+    
+    console.log('AI content:', content.slice(0, 200));
 
     let analysis;
     try {
       analysis = JSON.parse(content);
-    } catch {
+    } catch (parseErr) {
       console.error('Failed to parse AI response:', content);
       throw new Error('Invalid AI response format');
     }
