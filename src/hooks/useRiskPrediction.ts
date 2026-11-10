@@ -28,7 +28,12 @@ export const useRiskPrediction = ({
   const lastCallRef = useRef<number>(0);
   const isCallingRef = useRef<boolean>(false);
 
+  // Keep the polling schedule stable while telemetry changes every 150ms.
+  const telemetryRef = useRef({ drivers, raceInfo });
+  telemetryRef.current = { drivers, raceInfo };
+
   const fetchRiskAnalysis = useCallback(async () => {
+    const { drivers, raceInfo } = telemetryRef.current;
     if (!enabled || drivers.length === 0 || isCallingRef.current) {
       return;
     }
@@ -43,6 +48,9 @@ export const useRiskPrediction = ({
     setAnalysis(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      if (!supabase) {
+        throw new Error('AI risk analysis is unavailable: configure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY');
+      }
       const payload = {
         drivers: drivers.map(d => ({
           id: d.id,
@@ -96,7 +104,7 @@ export const useRiskPrediction = ({
     } finally {
       isCallingRef.current = false;
     }
-  }, [drivers, raceInfo, enabled, updateInterval]);
+  }, [enabled, updateInterval]);
 
   useEffect(() => {
     if (!enabled) return;

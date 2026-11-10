@@ -1,73 +1,47 @@
-# Welcome to your Lovable project
+# Race Command Center
 
-## Project info
+React, TypeScript and Vite demonstration dashboard for **simulated** Formula 1 telemetry.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Demo URL supplied by the project owner: https://telemetry-racer-ace.lovable.app
 
-## How can I edit this code?
+The demo is hosted by Lovable. Availability and parity with this checkout could not be verified during Day 1: the execution environment denied the host and shared Chrome could not resolve it. Opening or merging this PR does not establish that Lovable deployed it.
 
-There are several ways of editing your application.
+## What works locally
 
-**Use Lovable**
+- Ten simulated drivers, tyre/fuel/ERS anomaly detection and incident history.
+- Pause/resume, telemetry/architecture tabs, in-memory recording and replay, and the unknown-route page.
+- Optional AI risk analysis through the Supabase `race-risk-analysis` edge function. The polling schedule now survives telemetry updates. Successful remote predictions have not been verified.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Telemetry, connection health, latency, packet counts and race conditions are generated in the browser. Architecture diagrams describe a proposed system; there is no real race feed or WebSocket ingestion in this repository. Displayed simulation values are not production performance measurements.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Run locally
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Use Node.js 22 and npm:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm ci
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Vite defaults to port 8080 and chooses another port when occupied. The simulator runs without credentials. To enable AI, configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in a local, ignored `.env` file using the project's real Supabase settings. Do not put an OpenAI key in frontend variables. The edge function needs `OPENAI_API_KEY` configured as a server-side Supabase secret and must be deployed separately. No credentials are provided here.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Checks
 
-**Use GitHub Codespaces**
+```sh
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+GitHub Actions runs these checks after `npm ci` on every push and pull request with Node.js 22. Tests cover dashboard rendering/navigation, missing backend configuration, and polling during telemetry updates. The Deno edge function is not covered by the frontend TypeScript check or the mocked AI tests.
 
-## What technologies are used for this project?
+## Known limitations
 
-This project is built with:
+- Reset, Export, Settings and Fullscreen controls have no handlers.
+- Recording displays `0 frames` while active; snapshots are available after Stop. Sessions are memory-only and disappear on reload.
+- AI requires a reachable, configured Supabase function and server-side OpenAI credentials. End-to-end AI is unverified.
+- The architecture tab's 100Hz/WebSocket/reconnect statements describe an intended architecture, not the simulator implementation.
+- Legacy React refresh lint warnings and build bundle-size/browser-data warnings remain non-blocking.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+See [Day 1 triage](docs/day-1-triage.md) for evidence and the blocked live comparison. Follow [AGENTS.md](AGENTS.md) for branch, test, PR and daily-report rules.
