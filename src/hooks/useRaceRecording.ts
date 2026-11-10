@@ -85,7 +85,7 @@ export const useRaceRecording = ({
         clearInterval(playbackIntervalRef.current);
       }
     };
-  }, [replayState.isPlaying, replayState.playbackSpeed]);
+  }, [replayState.isPlaying, replayState.playbackSpeed, replayState.session]);
 
   const startRecording = useCallback(() => {
     snapshotsRef.current = [];
