@@ -38,8 +38,10 @@ GitHub Actions runs these checks after `npm ci` on every push and pull request w
 
 ## Known limitations
 
-- Reset, Export, Settings and Fullscreen controls have no handlers.
-- Recording displays `0 frames` while active; snapshots are available after Stop. Sessions are memory-only and disappear on reload.
+- Settings and Fullscreen controls have no handlers.
+- Reset starts a fresh simulated session, clears incidents/recording/replay/AI state and resumes streaming.
+- Export downloads JSON containing current simulated telemetry and any active or stopped recording (ISO date strings). There is no import feature.
+- Recording displays its live frame count and pauses with telemetry. Sessions are memory-only and disappear on reload or Reset.
 - AI requires a reachable, configured Supabase function and server-side OpenAI credentials. End-to-end AI is unverified.
 - The architecture tab's 100Hz/WebSocket/reconnect statements describe an intended architecture, not the simulator implementation.
 - Legacy React refresh lint warnings and build bundle-size/browser-data warnings remain non-blocking.

@@ -5,13 +5,15 @@ import { Play, Pause, RotateCcw, Settings, Download, Maximize2 } from 'lucide-re
 interface ControlPanelProps {
   isPaused: boolean;
   onTogglePause: () => void;
-  onReset?: () => void;
+  onReset: () => void;
+  onExport: () => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
   isPaused,
   onTogglePause,
   onReset,
+  onExport,
 }) => {
   return (
     <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-lg border border-border">
@@ -36,12 +38,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
       <div className="w-px h-6 bg-border" />
 
-      <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+      <Button onClick={onReset} variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
         <RotateCcw className="w-4 h-4" />
         <span className="font-orbitron text-xs">RESET</span>
       </Button>
 
-      <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+      <Button onClick={onExport} variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
         <Download className="w-4 h-4" />
         <span className="font-orbitron text-xs">EXPORT</span>
       </Button>

@@ -1,0 +1,55 @@
+import React from 'react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, expect, test, vi } from 'vitest';
+import App from '@/App';
+vi.mock('@/integrations/supabase/client', () => ({ supabase: null }));
+Object.defineProperty(window, 'matchMedia', { value: vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })) });
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
+
+test('recording counts live frames, freezes on pause, and Reset discards the session and resumes', () => {
+  vi.useFakeTimers();
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'RECORD' }));
+  expect(screen.getByText('REC • 1 frames')).toBeTruthy();
+  act(() => { vi.advanceTimersByTime(150); });
+  expect(screen.getByText('REC • 2 frames')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'PAUSE' }));
+  const count = screen.getByText(/REC •/).textContent;
+  act(() => { vi.advanceTimersByTime(450); });
+  expect(screen.getByText(/REC •/).textContent).toBe(count);
+  fireEvent.click(screen.getByRole('button', { name: 'STOP' }));
+  expect(screen.getByRole('button', { name: /REPLAY/ })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'RESET' }));
+  expect(screen.queryByRole('button', { name: /REPLAY/ })).toBeNull();
+  expect(screen.getByRole('button', { name: 'PAUSE' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'RECORD' }));
+  expect(screen.getByText('REC • 1 frames')).toBeTruthy();
+});
+
+test('Export downloads JSON with current telemetry and active/stopped recording frames', async () => {
+  vi.useFakeTimers();
+  const blobs: Blob[] = [];
+  Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn((blob: Blob) => { blobs.push(blob); return 'blob:export'; }) });
+  Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+  const filenames: string[] = [];
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { filenames.push(this.download); });
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'EXPORT' }));
+  fireEvent.click(screen.getByRole('button', { name: 'RECORD' }));
+  act(() => { vi.advanceTimersByTime(150); });
+  fireEvent.click(screen.getByRole('button', { name: 'EXPORT' }));
+  fireEvent.click(screen.getByRole('button', { name: 'STOP' }));
+  fireEvent.click(screen.getByRole('button', { name: 'EXPORT' }));
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(URL.revokeObjectURL).toHaveBeenCalledTimes(3);
+  vi.useRealTimers();
+  const read = (blob: Blob) => new Promise<string>(resolve => { const r = new FileReader(); r.onload = () => resolve(String(r.result)); r.readAsText(blob); });
+  const data = await Promise.all(blobs.map(async blob => JSON.parse(await read(blob))));
+  expect(data[0].simulated).toBe(true);
+  expect(data[0].current.drivers).toHaveLength(10);
+  expect(data[0].recording).toBeNull();
+  expect(data[1].recording.snapshots).toHaveLength(2);
+  expect(data[2].recording.snapshots).toHaveLength(2);
+  expect(click).toHaveBeenCalledTimes(3);
+  expect(filenames).toEqual(Array(3).fill('race-command-center.json'));
+});

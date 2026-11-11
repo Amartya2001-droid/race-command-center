@@ -26,6 +26,7 @@ export const useRaceRecording = ({
     session: null
   });
 
+  const [snapshotCount, setSnapshotCount] = useState(0);
   const snapshotsRef = useRef<TelemetrySnapshot[]>([]);
   const incidentsRef = useRef<RecordedIncident[]>([]);
   const recordedAnomalyIdsRef = useRef<Set<string>>(new Set());
@@ -42,6 +43,7 @@ export const useRaceRecording = ({
         raceInfo: { ...raceInfo }
       };
       snapshotsRef.current.push(snapshot);
+      setSnapshotCount(snapshotsRef.current.length);
 
       // Record new incidents
       anomalies.forEach(anomaly => {
@@ -88,6 +90,7 @@ export const useRaceRecording = ({
   }, [replayState.isPlaying, replayState.playbackSpeed, replayState.session]);
 
   const startRecording = useCallback(() => {
+    setSnapshotCount(0);
     snapshotsRef.current = [];
     incidentsRef.current = [];
     recordedAnomalyIdsRef.current = new Set();
@@ -157,6 +160,7 @@ export const useRaceRecording = ({
       playbackSpeed: 1,
       session: null
     });
+    setSnapshotCount(0);
     snapshotsRef.current = [];
     incidentsRef.current = [];
     recordedAnomalyIdsRef.current = new Set();
@@ -170,6 +174,11 @@ export const useRaceRecording = ({
 
   return {
     replayState,
+    snapshotCount,
+    getRecording: () => replayState.isRecording ? {
+      id: `session-${startTimeRef.current}`, startTime: startTimeRef.current, endTime: Date.now(),
+      snapshots: [...snapshotsRef.current], incidents: [...incidentsRef.current], raceInfo
+    } : replayState.session,
     currentSnapshot,
     progress,
     startRecording,
