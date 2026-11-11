@@ -38,7 +38,7 @@ GitHub Actions runs these checks after `npm ci` on every push and pull request w
 
 ## Known limitations
 
-- Fullscreen control has no handler.
+- Fullscreen toggles the browser Fullscreen API, follows Escape/browser exits and reports unsupported or denied requests.
 - Settings applies 150/500/1000 ms telemetry intervals and enables/disables new AI requests. Settings are session-only and restore defaults on Reset/reload; changing settings preserves pause state.
 - Reset starts a fresh simulated session, clears incidents/recording/replay/AI state and resumes streaming.
 - Export downloads JSON containing current simulated telemetry and any active or stopped recording (ISO date strings). There is no import feature.

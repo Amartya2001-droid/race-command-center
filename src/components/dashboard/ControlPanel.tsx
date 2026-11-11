@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader } from '@/components/ui/dialog';
+import { FullscreenButton } from './FullscreenButton';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, RotateCcw, Settings, Download, Maximize2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Settings, Download } from 'lucide-react';
 
 interface ControlPanelProps {
   isPaused: boolean;
@@ -61,9 +62,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         <Settings className="w-4 h-4" />
       </Button>
 
-      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-        <Maximize2 className="w-4 h-4" />
-      </Button>
+      <FullscreenButton />
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent>
