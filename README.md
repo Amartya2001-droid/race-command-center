@@ -38,7 +38,8 @@ GitHub Actions runs these checks after `npm ci` on every push and pull request w
 
 ## Known limitations
 
-- Settings and Fullscreen controls have no handlers.
+- Fullscreen control has no handler.
+- Settings applies 150/500/1000 ms telemetry intervals and enables/disables new AI requests. Settings are session-only and restore defaults on Reset/reload; changing settings preserves pause state.
 - Reset starts a fresh simulated session, clears incidents/recording/replay/AI state and resumes streaming.
 - Export downloads JSON containing current simulated telemetry and any active or stopped recording (ISO date strings). There is no import feature.
 - Recording displays its live frame count and pauses with telemetry. Sessions are memory-only and disappear on reload or Reset.

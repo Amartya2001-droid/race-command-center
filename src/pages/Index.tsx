@@ -17,6 +17,8 @@ import { downloadTelemetry } from '@/utils/exportTelemetry';
 import { LayoutDashboard, GitBranch, Users } from 'lucide-react';
 
 const Dashboard = ({ onReset }: { onReset: () => void }) => {
+  const [updateInterval, setUpdateInterval] = useState(150);
+  const [aiEnabled, setAIEnabled] = useState(true);
   const { 
     drivers, 
     anomalies, 
@@ -25,7 +27,7 @@ const Dashboard = ({ onReset }: { onReset: () => void }) => {
     isPaused, 
     togglePause,
     clearAnomalies 
-  } = useTelemetryStream(150);
+  } = useTelemetryStream(updateInterval);
 
   const {
     replayState,
@@ -55,7 +57,7 @@ const Dashboard = ({ onReset }: { onReset: () => void }) => {
   const riskAnalysis = useRiskPrediction({
     drivers,
     raceInfo,
-    enabled: !isPaused && !showReplayMode,
+    enabled: aiEnabled && !isPaused && !showReplayMode,
     updateInterval: 15000 // 15 seconds between AI calls
   });
 
@@ -138,6 +140,10 @@ const Dashboard = ({ onReset }: { onReset: () => void }) => {
                   isPaused={isPaused} 
                   onTogglePause={togglePause}
                   onReset={onReset}
+                  updateInterval={updateInterval}
+                  onUpdateInterval={setUpdateInterval}
+                  aiEnabled={aiEnabled}
+                  onAIEnabled={setAIEnabled}
                   onExport={() => downloadTelemetry({
                     schemaVersion: 1, simulated: true, exportedAt: new Date().toISOString(),
                     current: { drivers, anomalies, systemHealth, raceInfo },
