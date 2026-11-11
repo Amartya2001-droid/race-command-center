@@ -45,7 +45,7 @@ export const createRiskHandler = (complete: (body: unknown) => Promise<Response>
 
     const lapsRemaining = payload.raceInfo.totalLaps - payload.raceInfo.currentLap;
 
-    const systemPrompt = `You are an F1 race strategist AI analyzing live telemetry data to predict risks and provide decision support. 
+    const systemPrompt = `You are an F1 race strategist AI analyzing live telemetry data to predict risks and provide decision support.
 Your role is to identify potential issues BEFORE they become critical.
 
 Analyze the telemetry and return a JSON object with this exact structure:
@@ -102,13 +102,13 @@ Analyze for predictive risks and provide decision support.`;
 
     const data = await response.json();
     console.log('OpenAI response received:', JSON.stringify(data).slice(0, 500));
-    
+
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
       console.error('Empty content in response:', JSON.stringify(data));
       throw new Error('Empty response from AI');
     }
-    
+
     console.log('AI content:', content.slice(0, 200));
 
     let analysis;
@@ -124,7 +124,7 @@ Analyze for predictive risks and provide decision support.`;
     });
   } catch (error) {
     console.error('Error in race-risk-analysis:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       error: error instanceof Error ? error.message : 'Unknown error',
       predictions: [],
       overallRaceStatus: 'yellow',
