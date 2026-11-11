@@ -15,7 +15,7 @@ export interface RiskAnalysis {
   predictions: RiskPrediction[];
   overallRaceStatus: 'green' | 'yellow' | 'red';
   topPriority: string;
-  lastUpdated: Date;
+  lastUpdated: Date | null;
   isLoading: boolean;
   error: string | null;
 }

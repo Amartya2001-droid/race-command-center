@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DriverTelemetry, RaceInfo } from '@/types/telemetry';
-import { RiskAnalysis, RiskPrediction } from '@/types/riskPrediction';
+import { RiskAnalysis } from '@/types/riskPrediction';
 
 interface UseRiskPredictionProps {
   drivers: DriverTelemetry[];
@@ -19,8 +19,8 @@ export const useRiskPrediction = ({
   const [analysis, setAnalysis] = useState<RiskAnalysis>({
     predictions: [],
     overallRaceStatus: 'green',
-    topPriority: 'Monitoring telemetry...',
-    lastUpdated: new Date(),
+    topPriority: 'Waiting for AI analysis',
+    lastUpdated: null,
     isLoading: false,
     error: null
   });
