@@ -13,9 +13,10 @@ import { ReplayMode } from '@/components/dashboard/ReplayMode';
 import { AIRiskPanel } from '@/components/dashboard/AIRiskPanel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { downloadTelemetry } from '@/utils/exportTelemetry';
 import { LayoutDashboard, GitBranch, Users } from 'lucide-react';
 
-const Index = () => {
+const Dashboard = ({ onReset }: { onReset: () => void }) => {
   const { 
     drivers, 
     anomalies, 
@@ -28,6 +29,8 @@ const Index = () => {
 
   const {
     replayState,
+    snapshotCount,
+    getRecording,
     currentSnapshot,
     startRecording,
     stopRecording,
@@ -125,7 +128,7 @@ const Index = () => {
                   onStopRecording={stopRecording}
                   onEnterReplayMode={handleEnterReplayMode}
                   onClearSession={clearSession}
-                  snapshotCount={replayState.session?.snapshots.length}
+                  snapshotCount={snapshotCount}
                   incidentCount={replayState.session?.incidents.length}
                 />
 
@@ -133,7 +136,13 @@ const Index = () => {
 
                 <ControlPanel 
                   isPaused={isPaused} 
-                  onTogglePause={togglePause} 
+                  onTogglePause={togglePause}
+                  onReset={onReset}
+                  onExport={() => downloadTelemetry({
+                    schemaVersion: 1, simulated: true, exportedAt: new Date().toISOString(),
+                    current: { drivers, anomalies, systemHealth, raceInfo },
+                    recording: getRecording()
+                  })}
                 />
               </div>
             </div>
@@ -246,4 +255,9 @@ const Index = () => {
   );
 };
 
+// A new simulator session also clears recording, replay, incidents and AI state.
+const Index = () => {
+  const [session, setSession] = useState(0);
+  return <Dashboard key={session} onReset={() => setSession(value => value + 1)} />;
+};
 export default Index;
