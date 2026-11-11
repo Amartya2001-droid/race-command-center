@@ -1,3 +1,5 @@
+import { isPredictionResult, type RiskCompletionProvider } from './provider.ts';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -26,7 +28,7 @@ interface TelemetryPayload {
   };
 }
 
-export const createRiskHandler = (complete: (body: unknown) => Promise<Response>) => async (req: Request) => {
+export const createRiskHandler = (provider: RiskCompletionProvider) => async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -83,7 +85,7 @@ ${telemetrySummary}
 
 Analyze for predictive risks and provide decision support.`;
 
-    const response = await complete({
+    const response = await provider.complete({
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
@@ -95,29 +97,25 @@ Analyze for predictive risks and provide decision support.`;
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      throw new Error(`AI provider HTTP error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('OpenAI response received:', JSON.stringify(data).slice(0, 500));
 
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
-      console.error('Empty content in response:', JSON.stringify(data));
       throw new Error('Empty response from AI');
     }
 
-    console.log('AI content:', content.slice(0, 200));
 
     let analysis;
     try {
       analysis = JSON.parse(content);
     } catch (parseErr) {
-      console.error('Failed to parse AI response:', content);
       throw new Error('Invalid AI response format');
     }
+
+    if (!isPredictionResult(analysis)) throw new Error('Invalid AI prediction schema');
 
     return new Response(JSON.stringify(analysis), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

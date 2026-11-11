@@ -51,3 +51,11 @@ GitHub Actions runs these checks after `npm ci` on every push and pull request w
 - Legacy React refresh lint warnings and build bundle-size/browser-data warnings remain non-blocking.
 
 See [Day 2 triage and comparison](docs/day-2-triage.md) and [Day 1 triage](docs/day-1-triage.md) for evidence, the completed Day 2 comparison and Day 1 access limitations. Follow [AGENTS.md](AGENTS.md) for branch, test, PR and daily-report rules.
+
+## AI provider contract
+
+The server-side `RiskCompletionProvider` interface separates risk analysis from the provider transport. The OpenAI implementation reads `OPENAI_API_KEY` from the server environment at request time (Supabase uses `Deno.env.get`); no credential enters the frontend. Requests use `gpt-4o-mini` with JSON output and a 15-second timeout. The handler validates result fields, risk types, scores, status and the five-prediction limit before returning data. Invalid results fail explicitly rather than reaching the prediction cards. Provider HTTP response bodies are not sent to clients.
+
+Before the first successful result, the panel shows unavailable status and no analysis timestamp. It preserves and labels an earlier result when a refresh fails. All AI verification uses stubs, including the rendered panel; no real key or provider request has been used.
+
+A legitimate server-side `OPENAI_API_KEY` would enable real completion calls and validation of authentication, model/project access and quota, actual JSON responses and prediction quality. End-to-end use also requires deploying the Supabase function, supplying legitimate frontend Supabase configuration through deployment environment variables, and verifying authorization/CORS and the complete browser-to-provider path. The current Lovable demo has not been updated by these PRs; `.env` remains deleted.
