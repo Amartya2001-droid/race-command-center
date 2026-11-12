@@ -4,7 +4,7 @@ React, TypeScript and Vite demonstration dashboard for **simulated** Formula 1 t
 
 Demo URL supplied by the project owner: https://telemetry-racer-ace.lovable.app
 
-The demo is hosted by Lovable. Availability and parity with this checkout could not be verified during Day 1: the execution environment denied the host and shared Chrome could not resolve it. Opening or merging this PR does not establish that Lovable deployed it.
+The Lovable demo returned HTTP 200 and its frontend was inspected on November 11, 2026. It has simulated telemetry and replay, but lacks the repo’s AI panel and still has inactive Reset/Export/Settings/Fullscreen controls and the recording counter bug. The fixes in this branch are **not verified deployed**. See [Day 2 comparison](docs/day-2-triage.md) for the feature matrix, inspection method and limits. Opening or merging a PR does not establish a Lovable deployment.
 
 ## What works locally
 
@@ -23,7 +23,7 @@ npm ci
 npm run dev
 ```
 
-Vite defaults to port 8080 and chooses another port when occupied. The simulator runs without credentials. To enable AI, configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in a local, ignored `.env` file using the project's real Supabase settings. Do not put an OpenAI key in frontend variables. The edge function needs `OPENAI_API_KEY` configured as a server-side Supabase secret and must be deployed separately. No credentials are provided here.
+Vite defaults to port 8080 and chooses another port when occupied. The simulator runs without credentials. To enable AI, configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` through your shell or deployment environment using the project's real Supabase settings (keep `.env` deleted). Do not put an OpenAI key in frontend variables. The edge function needs `OPENAI_API_KEY` configured as a server-side Supabase secret and must be deployed separately. No credentials are provided here.
 
 ## Checks
 
@@ -34,16 +34,20 @@ npm test
 npm run build
 ```
 
-GitHub Actions runs these checks after `npm ci` on every push and pull request with Node.js 22. Tests cover dashboard rendering/navigation, missing backend configuration, and polling during telemetry updates. The Deno edge function is not covered by the frontend TypeScript check or the mocked AI tests.
+GitHub Actions runs these checks after `npm ci` on every push and pull request with Node.js 22. Tests cover dashboard rendering/navigation, missing backend configuration, and polling during telemetry updates. Mocked Node tests also exercise the edge handler, its telemetry prompts, success/error paths and missing server key. The Deno startup/deployment and real OpenAI integration are not validated by these tests.
 
-## Known limitations
+## Session controls
 
-- Settings and Fullscreen controls have no handlers.
+- Fullscreen toggles the browser Fullscreen API, follows Escape/browser exits and reports unsupported or denied requests.
+- Settings applies 150/500/1000 ms telemetry intervals and enables/disables new AI requests. Settings are session-only and restore defaults on Reset/reload; changing settings preserves pause state.
 - Reset starts a fresh simulated session, clears incidents/recording/replay/AI state and resumes streaming.
 - Export downloads JSON containing current simulated telemetry and any active or stopped recording (ISO date strings). There is no import feature.
 - Recording displays its live frame count and pauses with telemetry. Sessions are memory-only and disappear on reload or Reset.
+
+## Known limitations
+
 - AI requires a reachable, configured Supabase function and server-side OpenAI credentials. End-to-end AI is unverified.
 - The architecture tab's 100Hz/WebSocket/reconnect statements describe an intended architecture, not the simulator implementation.
 - Legacy React refresh lint warnings and build bundle-size/browser-data warnings remain non-blocking.
 
-See [Day 1 triage](docs/day-1-triage.md) for evidence and the blocked live comparison. Follow [AGENTS.md](AGENTS.md) for branch, test, PR and daily-report rules.
+See [Day 2 triage and comparison](docs/day-2-triage.md) and [Day 1 triage](docs/day-1-triage.md) for evidence, the completed Day 2 comparison and Day 1 access limitations. Follow [AGENTS.md](AGENTS.md) for branch, test, PR and daily-report rules.

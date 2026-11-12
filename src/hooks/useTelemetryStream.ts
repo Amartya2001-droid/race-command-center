@@ -66,10 +66,9 @@ export const useTelemetryStream = (updateInterval: number = 100) => {
     setState(prev => ({ ...prev, anomalies: [] }));
   }, []);
 
-  useEffect(() => {
-    // Initial load
-    updateTelemetry();
+  useEffect(() => { updateTelemetry(); }, [updateTelemetry]);
 
+  useEffect(() => {
     // Set up interval for updates
     intervalRef.current = setInterval(() => {
       if (!state.isPaused) {
