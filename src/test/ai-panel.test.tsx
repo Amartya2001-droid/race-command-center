@@ -5,7 +5,7 @@ import App from '@/App';
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { functions: { invoke } } }));
 Object.defineProperty(window, 'matchMedia', { value: vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })) });
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+afterEach(() => { cleanup(); localStorage.clear(); vi.clearAllMocks(); });
 
 test('AI panel waits for a result, renders a stubbed critical prediction and marks a failed refresh stale', async () => {
   invoke.mockResolvedValueOnce({ error: null, data: { predictions: [{ driverNumber: 1, driverName: 'M. VERSTAPPEN',

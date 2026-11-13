@@ -4,7 +4,7 @@ React, TypeScript and Vite demonstration dashboard for **simulated** Formula 1 t
 
 Demo URL supplied by the project owner: https://telemetry-racer-ace.lovable.app
 
-The Lovable demo returned HTTP 200 and its frontend was inspected on November 11, 2026. It has simulated telemetry and replay, but lacks the repo’s AI panel and still has inactive Reset/Export/Settings/Fullscreen controls and the recording counter bug. The fixes in this branch are **not verified deployed**. See [Day 2 comparison](docs/day-2-triage.md) for the feature matrix, inspection method and limits. Opening or merging a PR does not establish a Lovable deployment.
+The Lovable demo returned HTTP 200 and its frontend was rechecked on November 12, 2026. It has simulated telemetry and replay, but lacks the repo’s AI panel and still has inactive Reset/Export/Settings/Fullscreen controls and the recording counter bug. The fixes in this branch are **not verified deployed**. See [Day 3 features and validation](docs/day-3-features.md) and [Day 2 comparison](docs/day-2-triage.md) for the feature matrix, inspection method and limits. Opening or merging a PR does not establish a Lovable deployment.
 
 ## What works locally
 
@@ -41,12 +41,13 @@ GitHub Actions runs these checks after `npm ci` on every push and pull request w
 - Fullscreen toggles the browser Fullscreen API, follows Escape/browser exits and reports unsupported or denied requests.
 - Settings applies 150/500/1000 ms telemetry intervals and enables/disables new AI requests. Settings are session-only and restore defaults on Reset/reload; changing settings preserves pause state.
 - Reset starts a fresh simulated session, clears incidents/recording/replay/AI state and resumes streaming.
-- Export downloads JSON containing current simulated telemetry and any active or stopped recording (ISO date strings). There is no import feature.
-- Recording displays its live frame count and pauses with telemetry. Sessions are memory-only and disappear on reload or Reset.
+- Export downloads JSON containing current simulated telemetry and any active or stopped recording (ISO date strings). Import Recording accepts these version 1 simulated exports (up to 4 MiB), validates telemetry and incident references, and revives dates for replay. Exports without recorded frames cannot be imported.
+- Recording displays its live frame count and pauses with telemetry. Stop automatically saves the latest recording in this browser; reload restores it. Import replaces that saved recording. Clear saved recording or Reset deletes it. Active recordings are not saved until Stop; Export can capture them before leaving. Storage failures keep the recording in memory with an explicit warning.
 
 ## Known limitations
 
 - AI requires a reachable, configured Supabase function and server-side OpenAI credentials. End-to-end AI is unverified.
+- Capture automatically stops at 6000 frames or roughly 3 MiB of captured data, whichever comes first. Files/storage use a 4 MiB validation limit; recordings are simulated and local to this browser, not synchronized to an account. Replay follows recorded timestamps and supports 1x/2x speed and replaying again after the end.
 - The architecture tab's 100Hz/WebSocket/reconnect statements describe an intended architecture, not the simulator implementation.
 - Legacy React refresh lint warnings and build bundle-size/browser-data warnings remain non-blocking.
 

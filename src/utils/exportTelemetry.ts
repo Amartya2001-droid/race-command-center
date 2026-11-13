@@ -1,6 +1,6 @@
 /** Export only simulator/session data supplied by the caller, never configuration. */
 export function downloadTelemetry(data: unknown) {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
   link.download = 'race-command-center.json';
