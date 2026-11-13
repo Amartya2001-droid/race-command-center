@@ -4,7 +4,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import App from '@/App';
 vi.mock('@/integrations/supabase/client', () => ({ supabase: null }));
 Object.defineProperty(window, 'matchMedia', { value: vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })) });
-afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); localStorage.clear(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 test('recording counts live frames, freezes on pause, and Reset discards the session and resumes', () => {
   vi.useFakeTimers();

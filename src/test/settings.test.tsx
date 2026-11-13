@@ -5,7 +5,7 @@ import App from '@/App';
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { functions: { invoke } } }));
 Object.defineProperty(window, 'matchMedia', { value: vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })) });
-afterEach(() => { cleanup(); vi.useRealTimers(); vi.clearAllMocks(); });
+afterEach(() => { cleanup(); localStorage.clear(); vi.useRealTimers(); vi.clearAllMocks(); });
 test('Settings changes the recording cadence, preserves pause and stops/resumes AI polling', async () => {
   vi.useFakeTimers();
   invoke.mockResolvedValue({ data: { predictions: [] }, error: null });

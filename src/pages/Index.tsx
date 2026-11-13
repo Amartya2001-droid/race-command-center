@@ -13,6 +13,7 @@ import { ReplayMode } from '@/components/dashboard/ReplayMode';
 import { AIRiskPanel } from '@/components/dashboard/AIRiskPanel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RecordingImport } from '@/components/dashboard/RecordingImport';
 import { downloadTelemetry } from '@/utils/exportTelemetry';
 import { LayoutDashboard, GitBranch, Users } from 'lucide-react';
 
@@ -32,6 +33,8 @@ const Dashboard = ({ onReset }: { onReset: () => void }) => {
   const {
     replayState,
     snapshotCount,
+    storageMessage,
+    importRecording,
     getRecording,
     currentSnapshot,
     startRecording,
@@ -104,12 +107,13 @@ const Dashboard = ({ onReset }: { onReset: () => void }) => {
       {/* Header */}
       <RaceHeader raceInfo={raceInfo} systemHealth={systemHealth} />
 
+      {storageMessage && <div role="status" className="px-4 py-2 text-sm border-b border-border">{storageMessage}</div>}
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Tabs */}
         <div className="flex-1 flex flex-col min-w-0">
           <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 border-b border-border bg-card/50">
               <TabsList className="bg-secondary/50">
                 <TabsTrigger value="telemetry" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <LayoutDashboard className="w-4 h-4" />
@@ -121,7 +125,8 @@ const Dashboard = ({ onReset }: { onReset: () => void }) => {
                 </TabsTrigger>
               </TabsList>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <RecordingImport disabled={replayState.isRecording} onImport={importRecording} />
                 {/* Replay Controls */}
                 <ReplayControls
                   isRecording={replayState.isRecording}
@@ -139,7 +144,7 @@ const Dashboard = ({ onReset }: { onReset: () => void }) => {
                 <ControlPanel 
                   isPaused={isPaused} 
                   onTogglePause={togglePause}
-                  onReset={onReset}
+                  onReset={() => { if (clearSession()) onReset(); }}
                   updateInterval={updateInterval}
                   onUpdateInterval={setUpdateInterval}
                   aiEnabled={aiEnabled}

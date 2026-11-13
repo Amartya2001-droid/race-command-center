@@ -80,6 +80,7 @@ export const ReplayControls: React.FC<ReplayControlsProps> = ({
           <Button
             variant="ghost"
             size="sm"
+            aria-label="Clear saved recording"
             onClick={onClearSession}
             className="gap-2 text-muted-foreground"
           >
