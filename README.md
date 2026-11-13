@@ -9,6 +9,7 @@ The Lovable demo returned HTTP 200 and its frontend was rechecked on November 12
 ## What works locally
 
 - Ten simulated drivers, tyre/fuel/ERS anomaly detection and incident history.
+- Incident triage: combined text/severity/driver filters, unacknowledged-only view, per-incident acknowledgement/undo and acknowledgement of the shown set. Counts distinguish shown/total/acknowledged. Filters never delete incidents; Clear all incidents clears the whole history. Acknowledgements apply only to current browser memory/history and reset on reload/Reset, not a backend service.
 - Pause/resume, telemetry/architecture tabs, in-memory recording and replay, and the unknown-route page.
 - Optional AI risk analysis through the Supabase `race-risk-analysis` edge function. The polling schedule now survives telemetry updates. Successful remote predictions have not been verified.
 
