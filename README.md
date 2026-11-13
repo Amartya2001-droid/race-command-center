@@ -4,7 +4,7 @@ React, TypeScript and Vite demonstration dashboard for **simulated** Formula 1 t
 
 Demo URL supplied by the project owner: https://telemetry-racer-ace.lovable.app
 
-The Lovable demo returned HTTP 200 and its frontend was rechecked on November 12, 2026. It has simulated telemetry and replay, but lacks the repo’s AI panel and still has inactive Reset/Export/Settings/Fullscreen controls and the recording counter bug. The fixes in this branch are **not verified deployed**. See [Day 3 features and validation](docs/day-3-features.md) and [Day 2 comparison](docs/day-2-triage.md) for the feature matrix, inspection method and limits. Opening or merging a PR does not establish a Lovable deployment.
+The Lovable demo returned HTTP 200 and its frontend was rechecked on November 13, 2026. It has simulated telemetry and replay, but lacks the repo’s AI panel and still has inactive Reset/Export/Settings/Fullscreen controls and the recording counter bug. The fixes in this branch are **not verified deployed**. See [Day 3 features and validation](docs/day-3-features.md) and [Day 2 comparison](docs/day-2-triage.md) for the feature matrix, inspection method and limits. Opening or merging a PR does not establish a Lovable deployment.
 
 ## What works locally
 
