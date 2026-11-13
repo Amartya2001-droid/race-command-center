@@ -73,7 +73,7 @@ const PredictionCard = ({ prediction }: { prediction: RiskPrediction }) => {
         </div>
       </div>
       
-      {prediction.lapsUntilCritical && (
+      {prediction.lapsUntilCritical !== null && (
         <div className="flex items-center gap-1.5 text-xs text-warning">
           <Clock className="w-3 h-3" />
           <span>~{prediction.lapsUntilCritical} laps until critical</span>
@@ -122,6 +122,7 @@ export const AIRiskPanel = ({ analysis, onRefresh }: AIRiskPanelProps) => {
           <Button
             variant="ghost"
             size="sm"
+            aria-label="Refresh AI analysis"
             onClick={onRefresh}
             disabled={analysis.isLoading}
             className="h-7 w-7 p-0"
@@ -135,15 +136,16 @@ export const AIRiskPanel = ({ analysis, onRefresh }: AIRiskPanelProps) => {
       <div className="p-3 border-b border-border">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-muted-foreground uppercase">Race Status</span>
-          <span className={cn("px-2 py-0.5 rounded text-xs font-semibold uppercase", getStatusColor(analysis.overallRaceStatus))}>
-            {analysis.overallRaceStatus}
+          <span className={cn("px-2 py-0.5 rounded text-xs font-semibold uppercase", analysis.lastUpdated ? getStatusColor(analysis.overallRaceStatus) : 'text-muted-foreground bg-muted')}>
+            {analysis.lastUpdated ? analysis.overallRaceStatus : 'unavailable'}
           </span>
         </div>
         <div className="bg-secondary/50 rounded p-2">
           <div className="text-xs font-medium text-foreground">{analysis.topPriority}</div>
         </div>
         <div className="text-xs text-muted-foreground mt-2">
-          Last updated: {formatTime(analysis.lastUpdated)}
+          Last updated: {analysis.lastUpdated ? formatTime(analysis.lastUpdated) : 'Never'}
+          {analysis.error && analysis.lastUpdated && ' — previous analysis; refresh failed'}
         </div>
       </div>
 
@@ -163,8 +165,8 @@ export const AIRiskPanel = ({ analysis, onRefresh }: AIRiskPanelProps) => {
           {analysis.predictions.length === 0 && !analysis.isLoading && !analysis.error && (
             <div className="text-center py-8 text-muted-foreground">
               <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <div className="text-sm">No significant risks detected</div>
-              <div className="text-xs mt-1">AI is monitoring telemetry</div>
+              <div className="text-sm">{analysis.lastUpdated ? 'No significant risks detected' : 'Awaiting first analysis'}</div>
+              <div className="text-xs mt-1">{analysis.lastUpdated ? 'Analysis completed for simulated telemetry' : 'Risk status requires a successful analysis'}</div>
             </div>
           )}
           
