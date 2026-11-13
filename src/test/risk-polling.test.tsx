@@ -9,7 +9,7 @@ afterEach(() => { cleanup(); vi.useRealTimers(); vi.clearAllMocks(); });
 
 test('automatic risk polling survives telemetry updates and sends the latest frame', async () => {
   vi.useFakeTimers();
-  invoke.mockResolvedValue({ data: { predictions: [], overallRaceStatus: 'green' }, error: null });
+  invoke.mockResolvedValue({ data: { predictions: [], overallRaceStatus: 'green', topPriority: 'No significant risks' }, error: null });
   let driver = generateDriverTelemetry('ver-1', 0);
   const raceInfo = generateRaceInfo();
   const { rerender } = renderHook(({ drivers }) => useRiskPrediction({ drivers, raceInfo, updateInterval: 15000 }), {
@@ -29,7 +29,7 @@ test('automatic risk polling survives telemetry updates and sends the latest fra
 test('manual refresh recovers from invocation and application errors using stubs', async () => {
   invoke.mockResolvedValueOnce({ data: null, error: { message: 'stub backend unavailable' } })
     .mockResolvedValueOnce({ data: { error: 'stub upstream failure' }, error: null })
-    .mockResolvedValueOnce({ data: { predictions: [{ driverNumber: 1 }], overallRaceStatus: 'yellow', topPriority: 'Review tyres' }, error: null });
+    .mockResolvedValueOnce({ data: { predictions: [{ driverNumber: 1, driverName: 'Test driver', riskType: 'tyre_overheat', riskScore: 90, confidence: 80, lapsUntilCritical: 1, recommendation: 'Review cooling', reasoning: 'Test telemetry' }], overallRaceStatus: 'yellow', topPriority: 'Review tyres' }, error: null });
   const { result } = renderHook(() => useRiskPrediction({ drivers: [generateDriverTelemetry('ver-1', 0)], raceInfo: generateRaceInfo() }));
   await act(async () => { result.current.refreshNow(); });
   expect(result.current.error).toBe('stub backend unavailable');
@@ -38,7 +38,7 @@ test('manual refresh recovers from invocation and application errors using stubs
   expect(result.current.error).toBe('stub upstream failure');
   await act(async () => { result.current.refreshNow(); });
   expect(result.current.error).toBeNull();
-  expect(result.current.predictions).toEqual([{ driverNumber: 1 }]);
+  expect(result.current.predictions).toEqual([{ driverNumber: 1, driverName: 'Test driver', riskType: 'tyre_overheat', riskScore: 90, confidence: 80, lapsUntilCritical: 1, recommendation: 'Review cooling', reasoning: 'Test telemetry' }]);
   expect(result.current.overallRaceStatus).toBe('yellow');
 });
 
@@ -60,6 +60,55 @@ test('empty/disabled telemetry does not call AI and pending requests cannot over
   expect(result.current.isLoading).toBe(true);
   await act(async () => { result.current.refreshNow(); });
   expect(invoke).toHaveBeenCalledTimes(1);
-  await act(async () => { finish({ data: { predictions: [] }, error: null }); });
+  await act(async () => { finish({ data: { predictions: [], overallRaceStatus: 'green', topPriority: 'No significant risks' }, error: null }); });
   expect(result.current.isLoading).toBe(false);
+});
+
+test('automatic refresh is throttled after a manual request', async () => {
+  vi.useFakeTimers();
+  invoke.mockResolvedValue({ data: { predictions: [], overallRaceStatus: 'green', topPriority: 'No significant risks' }, error: null });
+  const drivers = [generateDriverTelemetry('ver-1', 0)];
+  const raceInfo = generateRaceInfo();
+  const { result } = renderHook(() => useRiskPrediction({ drivers, raceInfo, updateInterval: 10000 }));
+  await act(async () => { result.current.refreshNow(); });
+  await act(async () => { vi.advanceTimersByTime(2000); });
+  expect(invoke).toHaveBeenCalledTimes(1);
+});
+
+test.each([true, false])('disabled pending request ignores its later result (success=%s)', async success => {
+  let resolve: (value: unknown) => void = () => {};
+  let reject: (value: unknown) => void = () => {};
+  invoke.mockImplementation(() => new Promise((res, rej) => { resolve = res; reject = rej; }));
+  const drivers = [generateDriverTelemetry('ver-1', 0)];
+  const raceInfo = generateRaceInfo();
+  const { result, rerender } = renderHook(({ enabled }) => useRiskPrediction({ drivers, raceInfo, enabled }), { initialProps: { enabled: true } });
+  await act(async () => { result.current.refreshNow(); });
+  rerender({ enabled: false });
+  await act(async () => {
+    if (success) resolve({ data: { predictions: [], overallRaceStatus: 'green', topPriority: 'stale result' }, error: null });
+    else reject(new Error('stale failure'));
+  });
+  expect(result.current.isLoading).toBe(false);
+  expect(result.current.lastUpdated).toBeNull();
+  expect(result.current.error).toBeNull();
+  expect(result.current.topPriority).not.toBe('stale result');
+});
+
+test.each([null, {}, { predictions: 'invalid' }])('malformed Supabase data fails safely (%j)', async data => {
+  invoke.mockResolvedValue({ data, error: null });
+  const drivers = [generateDriverTelemetry('ver-1', 0)];
+  const raceInfo = generateRaceInfo();
+  const { result } = renderHook(() => useRiskPrediction({ drivers, raceInfo }));
+  await act(async () => { result.current.refreshNow(); });
+  expect(result.current.error).toBe('Invalid AI prediction response');
+  expect(result.current.lastUpdated).toBeNull();
+});
+
+test('non-Error rejection has a safe fallback', async () => {
+  invoke.mockRejectedValue('non-error failure');
+  const drivers = [generateDriverTelemetry('ver-1', 0)];
+  const raceInfo = generateRaceInfo();
+  const { result } = renderHook(() => useRiskPrediction({ drivers, raceInfo }));
+  await act(async () => { result.current.refreshNow(); });
+  expect(result.current.error).toBe('Failed to fetch predictions');
 });

@@ -1,8 +1,9 @@
 // Node request/response primitives exercise the same handler deployed by Deno.
 // @vitest-environment node
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { createRiskHandler } from '../../supabase/functions/race-risk-analysis/handler';
 import { createOpenAIProvider } from '../../supabase/functions/race-risk-analysis/openai';
+afterEach(() => vi.unstubAllGlobals());
 const payload = { drivers: [{ id: 'ver-1', driverNumber: 1, driverName: 'M. VERSTAPPEN', fuel: 12,
   tyreTemp: { frontLeft: 115, frontRight: 100, rearLeft: 102, rearRight: 103 },
   tyreWear: { frontLeft: 80, frontRight: 70, rearLeft: 60, rearRight: 70 },
@@ -19,7 +20,8 @@ test('preflight needs no completion or key', async () => {
 
 test('server adapter refuses a missing key without making a network request', async () => {
   const fetcher = vi.fn();
-  const response = await createRiskHandler(createOpenAIProvider(() => undefined, fetcher))(request());
+  vi.stubGlobal('Deno', { env: { get: vi.fn().mockReturnValue(undefined) } });
+  const response = await createRiskHandler(createOpenAIProvider(fetcher))(request());
   expect(response.status).toBe(500);
   expect((await response.json()).error).toBe('OPENAI_API_KEY is not configured');
   expect(fetcher).not.toHaveBeenCalled();
@@ -84,4 +86,10 @@ test('provider timeout becomes an unavailable response with no predictions', asy
   const response = await createRiskHandler({ complete })(request());
   expect(response.status).toBe(500);
   expect((await response.json()).predictions).toEqual([]);
+});
+
+test('non-Error provider rejection returns an unavailable result', async () => {
+  const response = await createRiskHandler({ complete: vi.fn().mockRejectedValue(null) })(request());
+  expect(response.status).toBe(500);
+  expect((await response.json()).error).toBe('Unknown error');
 });

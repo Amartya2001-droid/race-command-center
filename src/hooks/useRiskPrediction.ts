@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DriverTelemetry, RaceInfo } from '@/types/telemetry';
+import { isPredictionResult } from '../../supabase/functions/race-risk-analysis/provider';
 import { RiskAnalysis } from '@/types/riskPrediction';
 
 interface UseRiskPredictionProps {
@@ -25,7 +26,8 @@ export const useRiskPrediction = ({
     error: null
   });
 
-  const lastCallRef = useRef<number>(0);
+  const lastCallRef = useRef<number>(-Infinity);
+  const epochRef = useRef(0);
   const isCallingRef = useRef<boolean>(false);
 
   // Keep the polling schedule stable while telemetry changes every 150ms.
@@ -43,6 +45,7 @@ export const useRiskPrediction = ({
       return; // Throttle calls
     }
 
+    const epoch = epochRef.current;
     isCallingRef.current = true;
     lastCallRef.current = now;
     setAnalysis(prev => ({ ...prev, isLoading: true, error: null }));
@@ -82,20 +85,22 @@ export const useRiskPrediction = ({
         throw new Error(error.message);
       }
 
-      if (data.error) {
+      if (data?.error) {
         throw new Error(data.error);
       }
 
+      if (!isPredictionResult(data)) throw new Error('Invalid AI prediction response');
+      if (epoch !== epochRef.current) return;
       setAnalysis({
-        predictions: data.predictions || [],
-        overallRaceStatus: data.overallRaceStatus || 'green',
-        topPriority: data.topPriority || 'All systems nominal',
+        predictions: data.predictions,
+        overallRaceStatus: data.overallRaceStatus,
+        topPriority: data.topPriority,
         lastUpdated: new Date(),
         isLoading: false,
         error: null
       });
     } catch (err) {
-      console.error('Risk prediction error:', err);
+      if (epoch !== epochRef.current) return;
       setAnalysis(prev => ({
         ...prev,
         isLoading: false,
@@ -107,8 +112,10 @@ export const useRiskPrediction = ({
   }, [enabled, updateInterval]);
 
   useEffect(() => {
+    setAnalysis(prev => ({ ...prev, isLoading: false }));
     if (!enabled) return;
 
+    const epoch = epochRef.current;
     // Initial call after a short delay
     const initialTimeout = setTimeout(() => {
       fetchRiskAnalysis();
@@ -120,6 +127,7 @@ export const useRiskPrediction = ({
     }, updateInterval);
 
     return () => {
+      epochRef.current = epoch + 1;
       clearTimeout(initialTimeout);
       clearInterval(interval);
     };
