@@ -1,10 +1,11 @@
+import { denoRuntime } from './runtime.ts';
 import type { RiskCompletionProvider } from './provider.ts';
 
 /** Credentials stay server-side and are resolved at request time. */
-export function createOpenAIProvider(getKey: () => string | undefined, fetcher: typeof fetch = fetch): RiskCompletionProvider {
+export function createOpenAIProvider(fetcher: typeof fetch = fetch): RiskCompletionProvider {
   return {
     async complete(body) {
-      const key = getKey();
+      const key = denoRuntime().env.get('OPENAI_API_KEY');
       if (!key) throw new Error('OPENAI_API_KEY is not configured');
       try {
         return await fetcher('https://api.openai.com/v1/chat/completions', {

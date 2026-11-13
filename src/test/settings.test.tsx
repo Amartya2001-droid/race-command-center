@@ -8,7 +8,7 @@ Object.defineProperty(window, 'matchMedia', { value: vi.fn(() => ({ matches: fal
 afterEach(() => { cleanup(); localStorage.clear(); vi.useRealTimers(); vi.clearAllMocks(); });
 test('Settings changes the recording cadence, preserves pause and stops/resumes AI polling', async () => {
   vi.useFakeTimers();
-  invoke.mockResolvedValue({ data: { predictions: [] }, error: null });
+  invoke.mockResolvedValue({ data: { predictions: [], overallRaceStatus: 'green', topPriority: 'No significant risks' }, error: null });
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.change(screen.getByLabelText('Telemetry interval'), { target: { value: '1000' } });
