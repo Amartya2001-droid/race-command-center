@@ -4,7 +4,7 @@ React, TypeScript and Vite demonstration dashboard for **simulated** Formula 1 t
 
 Demo URL supplied by the project owner: https://telemetry-racer-ace.lovable.app
 
-The Lovable demo returned HTTP 200 and its frontend was rechecked on November 13, 2026. It has simulated telemetry and replay, but lacks the repo’s AI panel and still has inactive Reset/Export/Settings/Fullscreen controls and the recording counter bug. The fixes in this branch are **not verified deployed**. See [Day 3 features and validation](docs/day-3-features.md) and [Day 2 comparison](docs/day-2-triage.md) for the feature matrix, inspection method and limits. Opening or merging a PR does not establish a Lovable deployment.
+The Lovable demo returned HTTP 200 and its frontend was rechecked on November 14, 2026. It has simulated telemetry and replay, but lacks the repo’s AI panel and still has inactive Reset/Export/Settings/Fullscreen controls and the recording counter bug. The fixes in this branch are **not verified deployed**. See [Day 3 features and validation](docs/day-3-features.md) and [Day 2 comparison](docs/day-2-triage.md) for the feature matrix, inspection method and limits. Opening or merging a PR does not establish a Lovable deployment. The Day 5 audit also confirmed missing incident-triage/import controls and loss of stopped recordings on reload. The next fix is tracked in [issue #13](https://github.com/Amartya2001-droid/race-command-center/issues/13); see [Day 5 parity evidence](docs/day-5-parity.md).
 
 ## What works locally
 
