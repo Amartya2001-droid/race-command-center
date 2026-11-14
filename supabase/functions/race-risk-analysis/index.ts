@@ -1,5 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { denoRuntime } from "./runtime.ts";
 import { createRiskHandler } from "./handler.ts";
 import { createOpenAIProvider } from "./openai.ts";
 
-serve(createRiskHandler(createOpenAIProvider(() => Deno.env.get('OPENAI_API_KEY'))));
+// Startup needs no key: preflight and missing-configuration responses still work.
+denoRuntime().serve(createRiskHandler(createOpenAIProvider()));

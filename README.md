@@ -31,6 +31,7 @@ Vite defaults to port 8080 and chooses another port when occupied. The simulator
 npm run typecheck
 npm run lint
 npm test
+npm run test:ai
 npm run build
 ```
 
@@ -55,8 +56,14 @@ See [Day 2 triage and comparison](docs/day-2-triage.md) and [Day 1 triage](docs/
 
 ## AI provider contract
 
-The server-side `RiskCompletionProvider` interface separates risk analysis from the provider transport. The OpenAI implementation reads `OPENAI_API_KEY` from the server environment at request time (Supabase uses `Deno.env.get`); no credential enters the frontend. Requests use `gpt-4o-mini` with JSON output and a 15-second timeout. The handler validates result fields, risk types, scores, status and the five-prediction limit before returning data. Invalid results fail explicitly rather than reaching the prediction cards. Provider HTTP response bodies are not sent to clients.
+The server-side `RiskCompletionProvider` interface separates risk analysis from the provider transport. The OpenAI implementation reads `OPENAI_API_KEY` directly and only from `Deno.env.get` at request time, without a caller-supplied key or Node/Vite fallback; no credential enters the frontend. Requests use `gpt-4o-mini` with JSON output and a 15-second timeout. The handler validates result fields, risk types, scores, status and the five-prediction limit before returning data. Invalid results fail explicitly rather than reaching the prediction cards. Provider HTTP response bodies are not sent to clients.
 
 Before the first successful result, the panel shows unavailable status and no analysis timestamp. It preserves and labels an earlier result when a refresh fails. All AI verification uses stubs, including the rendered panel; no real key or provider request has been used.
 
 A legitimate server-side `OPENAI_API_KEY` would enable real completion calls and validation of authentication, model/project access and quota, actual JSON responses and prediction quality. End-to-end use also requires deploying the Supabase function, supplying legitimate frontend Supabase configuration through deployment environment variables, and verifying authorization/CORS and the complete browser-to-provider path. The current Lovable demo has not been updated by these PRs; `.env` remains deleted.
+
+## Day 4 AI verification
+
+`npm run test:ai` runs credential-free mocks for native Deno startup, the Deno-only environment read, HTTP transport, request/response handling, prediction validation, Supabase configuration, polling and the rendered panel. V8 coverage is gated at 100% of statements, branches, functions and lines for the eight AI modules listed in `vitest.ai.config.ts`. CI enforces that gate. This measures the mocked code paths, not production OpenAI behavior or a deployed Deno runtime.
+
+Late responses after polling is disabled are ignored, and malformed backend predictions are rejected before rendering. Amartya still needs to enter the legitimate key himself into the server environment; no stored key is read back, copied or committed by this work. Real provider authentication, quota/model access, response quality and deployed integration remain unverified until legitimate configuration and deployment are available.
