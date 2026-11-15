@@ -11,7 +11,11 @@
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "test": "vitest run",
-    "test:ai": "vitest run --config vitest.ai.config.ts --coverage"
+    "test:ai": "vitest run --config vitest.ai.config.ts --coverage",
+    "verify:deployment": "node scripts/verify-deployment.mjs",
+    "verify:build": "node scripts/verify-build.mjs",
+    "smoke:deployment": "node scripts/smoke-deployment.mjs",
+    "smoke:build": "node scripts/smoke-build.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -81,6 +85,7 @@
     "globals": "^15.15.0",
     "jsdom": "^26.1.0",
     "lovable-tagger": "^1.1.13",
+    "playwright": "^1.62.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
