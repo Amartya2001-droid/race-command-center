@@ -12,6 +12,7 @@ export async function rolloutSmoke(url, expected) {
     ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}),
   });
   const checks = [];
+  let stage = 'build identity and initial UI';
   try {
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, acceptDownloads: true });
     const errors = [];
@@ -33,12 +34,15 @@ export async function rolloutSmoke(url, expected) {
     await page.getByText(`Build ${expected.commit.slice(0, 12)}`, { exact: true }).waitFor();
     await page.getByText('AI RISK PREDICTION', { exact: true }).waitFor();
     checks.push('Source identity and AI panel visible');
+    stage = 'settings and recording';
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByLabel('Telemetry interval').selectOption('500');
     await page.getByLabel('Enable AI risk polling').uncheck();
     await page.getByRole('button', { name: 'Done', exact: true }).click();
     await page.getByRole('button', { name: 'RECORD', exact: true }).click();
-    await page.waitForTimeout(1100);
+    await page.waitForFunction(() => [...document.querySelectorAll('span')].some(element => {
+      const match = element.textContent?.match(/REC • (\d+) frames/); return match && Number(match[1]) >= 3;
+    }), null, { timeout: 10000 });
     await page.getByRole('button', { name: 'PAUSE', exact: true }).click();
     const counter = await page.getByText(/REC •/).innerText();
     const frames = Number(counter.match(/(\d+) frames/)[1]);
@@ -75,7 +79,8 @@ export async function rolloutSmoke(url, expected) {
     await page.reload();
     assert.equal(await page.getByRole('button', { name: /REPLAY/ }).count(), 0);
     checks.push('Settings, live counter, Pause, Export, durable reload/replay, Reset, Import/replay, invalid-import preservation and durable Clear');
-    await page.waitForFunction(() => document.querySelectorAll('[aria-label^="Incident "]').length > 0);
+    stage = 'incident triage search';
+    await page.waitForFunction(() => document.querySelectorAll('div[aria-label^="Incident "]').length > 0);
     await page.getByRole('button', { name: 'PAUSE', exact: true }).click();
     const log = page.getByRole('region', { name: 'Incident log', exact: true });
     await log.getByLabel('Search incidents').fill('no-matching-test-incident');
@@ -83,6 +88,7 @@ export async function rolloutSmoke(url, expected) {
     await log.getByRole('button', { name: 'Reset incident filters', exact: true }).click();
     const driver = await log.getByLabel('Incident driver').locator('option').nth(1).getAttribute('value');
     await log.getByLabel('Incident driver').selectOption(driver);
+    stage = 'incident acknowledgement';
     await log.getByRole('button', { name: 'Acknowledge shown', exact: true }).click();
     await log.getByLabel('Unacknowledged only').check();
     await log.getByText('No incidents match your filters', { exact: true }).waitFor();
@@ -91,6 +97,7 @@ export async function rolloutSmoke(url, expected) {
     await log.getByRole('button', { name: 'Clear all incidents', exact: true }).click();
     await log.getByText('No incidents detected', { exact: true }).waitFor();
     checks.push('Incident search, driver filtering, acknowledge shown, active-only, undo and Clear all');
+    stage = 'native fullscreen';
     await page.getByRole('button', { name: 'Enter fullscreen', exact: true }).click();
     await page.waitForFunction(() => !!document.fullscreenElement);
     await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click();
@@ -98,5 +105,6 @@ export async function rolloutSmoke(url, expected) {
     checks.push('Native fullscreen enter/exit');
     assert.deepEqual(errors, []);
     return { ok: true, url, commit: expected.commit, checks, aiMode: 'Backend requests intercepted; real AI unverified' };
-  } finally { await browser.close(); }
+  } catch (error) { throw new Error(`${stage}: ${error.message}`); }
+  finally { await browser.close(); }
 }
