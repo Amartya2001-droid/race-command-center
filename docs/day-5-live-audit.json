@@ -1,0 +1,19 @@
+{
+  "url": "https://telemetry-racer-ace.lovable.app",
+  "method": "Live HTML/assets fetched with TLS-verified curl and fulfilled into Chromium; all other hosts blocked. No AI call.",
+  "blockedRequests": 0,
+  "triage": {
+    "search": 0,
+    "severity": 0,
+    "driver": 0,
+    "acknowledgeShown": 0
+  },
+  "aiPanel": 0,
+  "importRecording": 0,
+  "pauseShowsResume": 1,
+  "activeCounter": "REC • 0 frames",
+  "exportDownload": false,
+  "replayAfterStop": 1,
+  "replayAfterReload": 0,
+  "roundTrip": "blocked by missing export/import control"
+}
