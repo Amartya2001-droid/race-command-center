@@ -7,7 +7,7 @@ const contract = JSON.parse(readFileSync(new URL('../../config/deployment.json',
 const source = { repository: contract.repository, branch: 'main', commit: 'a'.repeat(40), dirty: false, builtAt: '2026-11-15T00:00:00Z' };
 const expected = { ...source, contract };
 function published() {
-  const html = Buffer.from(`<meta name="race-command-center-build" content="${source.commit}"><script src="/assets/app.js"></script>`);
+  const html = Buffer.from(`<meta name="race-command-center-build" content="${source.commit}"><script type="module" src="/assets/app.js"></script>`);
   const js = Buffer.from('console.log("simulator");');
   const manifest = { ...createIdentity(source, contract), assets: [{ path: 'index.html', sha256: digest(html) }, { path: 'assets/app.js', entrypoint: true, sha256: digest(js) }] };
   const files = new Map([['/build-identity.json', Buffer.from(JSON.stringify(manifest))], ['/index.html', html], ['/assets/app.js', js]]);
@@ -77,8 +77,66 @@ test('hosting badge markup may change HTML bytes but not the commit, entrypoint 
 });
 test('a wrong Lovable badge project and stale HTML entrypoint fail independently', async () => {
   const { files, read } = published();
-  files.set('/index.html', Buffer.from(`<meta content="${source.commit}"><script src="/assets/old.js"></script><a href="https://lovable.dev/projects/lovp_wrong">Edit</a>`));
+  files.set('/index.html', Buffer.from(`<meta name="race-command-center-build" content="${source.commit}"><script type="module" src="/assets/old.js"></script><a href="https://lovable.dev/projects/lovp_wrong">Edit</a>`));
   const result = await verifyDeployment(contract.liveUrl, expected, read);
   expect(result.errors).toContain('HTML does not reference expected entrypoint: assets/app.js');
   expect(result.errors).toContain('Observed Lovable badge project does not match the deployment contract');
+});
+
+const marker = `<meta name="race-command-center-build" content="${source.commit}">`;
+const entry = '<script type="module" src="/assets/app.js"></script>';
+async function verifyHtml(html: string) {
+  const { files, read } = published();
+  files.set('/index.html', Buffer.from(html));
+  return { result: await verifyDeployment(contract.liveUrl, expected, read), read };
+}
+
+test.each([
+  ['comment', `<!-- ${marker}${entry} -->`],
+  ['template', `<template>${marker}${entry}</template>`],
+  ['script string', `<script>const fake = '${marker}${entry.replace('</script>', '<\\/script>')}';</script>`],
+  ['noscript', `<noscript>${marker}${entry}</noscript>`],
+])('inert %s lookalikes cannot satisfy build identity', async (_name, html) => {
+  const { result } = await verifyHtml(html);
+  expect(result.ok).toBe(false);
+  expect(result.errors).toContain('HTML does not identify the same source commit');
+  expect(result.errors).toContain('HTML does not reference expected entrypoint: assets/app.js');
+});
+
+test.each([
+  ['classic script', '<script src="/assets/app.js"></script>'],
+  ['preload link', '<link rel="modulepreload" href="/assets/app.js">'],
+  ['commented entry', `<!-- ${entry} -->`],
+  ['inert template entry', `<template>${entry}</template>`],
+  ['external entry', '<script type="module" src="https://other.example.test/assets/app.js"></script>'],
+  ['different path containing expected text', '<script type="module" src="/old/assets/app.js"></script>'],
+])('a %s cannot masquerade as the expected module', async (_name, script) => {
+  const { result, read } = await verifyHtml(marker + script);
+  expect(result.ok).toBe(false);
+  expect(result.errors).toContain('HTML does not reference expected entrypoint: assets/app.js');
+  expect(read.mock.calls.every(([url]) => new URL(url).origin === contract.liveUrl)).toBe(true);
+});
+
+test('an unrelated or duplicate meta tag cannot establish the source commit', async () => {
+  expect((await verifyHtml(`<meta name="unrelated" content="${source.commit}">${entry}`)).result.errors)
+    .toContain('HTML does not identify the same source commit');
+  expect((await verifyHtml(marker + marker + entry)).result.errors)
+    .toContain('HTML does not identify the same source commit');
+});
+
+test('normal HTML attribute variants and encoded URLs are parsed correctly', async () => {
+  const html = `<!doctype html><head><META CONTENT='${source.commit}' NAME='race-command-center-build'></head><body><script SRC='&#47;assets/app.js' TYPE='module'></script></body>`;
+  expect((await verifyHtml(html)).result.ok).toBe(true);
+});
+
+test('the effective HTML base controls script resolution', async () => {
+  const foreign = await verifyHtml(`<base href="https://other.example.test/">${marker}${entry}`);
+  expect(foreign.result.errors).toContain('HTML does not reference expected entrypoint: assets/app.js');
+  const firstBase = await verifyHtml(`<base href="${contract.liveUrl}/"><base href="https://other.example.test/">${marker}${entry}`);
+  expect(firstBase.result.ok).toBe(true);
+});
+
+test('commented badge links do not override the actual live project badge', async () => {
+  const html = `${marker}${entry}<!-- https://lovable.dev/projects/lovp_wrong --><a href="https://lovable.dev/projects/${contract.lovableProjectId}?utm_source=badge">Edit</a>`;
+  expect((await verifyHtml(html)).result.ok).toBe(true);
 });
