@@ -120,7 +120,7 @@ export async function verifyDeployment(baseUrl, expected, read, options = {}) {
       errors.push('HTML does not identify the same source commit');
     }
     for (const asset of assets.filter(a => a.entrypoint === true)) {
-      const expectedUrl = new URL(asset.path, `${base.href.replace(/\\/$/, '')}/`).href;
+      const expectedUrl = new URL(asset.path, base.href.endsWith('/') ? base.href : base.href + '/').href;
       if (!evidence.modules.includes(expectedUrl)) errors.push(`HTML does not reference expected entrypoint: ${asset.path}`);
     }
     if (evidence.projects.some(project => project !== expected.contract.lovableProjectId)) {
