@@ -19,3 +19,11 @@ jobs:
       - run: npm test
       - run: npm run test:ai
       - run: npm run build
+      - run: npm run verify:build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run smoke:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: race-command-center-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
