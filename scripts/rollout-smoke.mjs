@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { REQUIRED_CHECKS } from './acceptance.mjs';
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { verifyDeployment } from './deployment.mjs';
@@ -33,7 +34,7 @@ export async function rolloutSmoke(url, expected) {
     await page.goto(url);
     await page.getByText(`Build ${expected.commit.slice(0, 12)}`, { exact: true }).waitFor();
     await page.getByText('AI RISK PREDICTION', { exact: true }).waitFor();
-    checks.push('Source identity and AI panel visible');
+    checks.push(REQUIRED_CHECKS[0]);
     stage = 'settings and recording';
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByLabel('Telemetry interval').selectOption('500');
@@ -78,7 +79,7 @@ export async function rolloutSmoke(url, expected) {
     await page.getByRole('button', { name: 'Clear saved recording', exact: true }).click();
     await page.reload();
     assert.equal(await page.getByRole('button', { name: /REPLAY/ }).count(), 0);
-    checks.push('Settings, live counter, Pause, Export, durable reload/replay, Reset, Import/replay, invalid-import preservation and durable Clear');
+    checks.push(REQUIRED_CHECKS[1]);
     stage = 'incident triage search';
     await page.waitForFunction(() => document.querySelectorAll('div[aria-label^="Incident "]').length > 0);
     await page.getByRole('button', { name: 'PAUSE', exact: true }).click();
@@ -96,15 +97,17 @@ export async function rolloutSmoke(url, expected) {
     await log.getByRole('button', { name: 'Acknowledged — undo' }).first().click();
     await log.getByRole('button', { name: 'Clear all incidents', exact: true }).click();
     await log.getByText('No incidents detected', { exact: true }).waitFor();
-    checks.push('Incident search, driver filtering, acknowledge shown, active-only, undo and Clear all');
+    checks.push(REQUIRED_CHECKS[2]);
     stage = 'native fullscreen';
     await page.getByRole('button', { name: 'Enter fullscreen', exact: true }).click();
     await page.waitForFunction(() => !!document.fullscreenElement);
     await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click();
     await page.waitForFunction(() => !document.fullscreenElement);
-    checks.push('Native fullscreen enter/exit');
+    checks.push(REQUIRED_CHECKS[3]);
     assert.deepEqual(errors, []);
     return { ok: true, url, commit: expected.commit, checks, aiMode: 'Backend requests intercepted; real AI unverified' };
-  } catch (error) { throw new Error(`${stage}: ${error.message}`); }
+  } catch (error) {
+    throw Object.assign(new Error(`${stage}: ${error.message}`), { stage, checks: [...checks] });
+  }
   finally { await browser.close(); }
 }

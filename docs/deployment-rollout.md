@@ -52,3 +52,15 @@ The smoke starts and stops a production Vite preview on port 4173. Browser testi
 `verify:deployment` requires curl and uses its inherited proxy/CA settings with TLS verification enabled. It never reads credentials. The smoke fulfills frontend assets through the same certificate-verified HTTP path where needed and intercepts backend/XHR requests before network transmission. No OpenAI key is needed for build identity, control verification or this rollout.
 
 Real AI remains separate: Amartya must enter a legitimate server-side `OPENAI_API_KEY` himself into the Deno/Supabase function environment. No stored key can be read back. Authentication, model/quota access, completion quality and the deployed AI integration remain unverified until that configuration and function deployment are available. Keep `.env` deleted.
+
+## Acceptance receipts (Day 8)
+
+`npm run smoke:deployment -- --expected-sha FULL_DEPLOYED_SHA` now writes a versioned JSON report under the ignored `acceptance-reports/` directory and prints its path. The command performs identity verification before any browser work. An identity failure records `browser.status: "not-run"`; a browser failure records its stage and the completed checklist entries. Successful browser results must match the exact checked target/source and include every required rollout check.
+
+The report includes target URL, expected SHA/repository/branch/project, start/end timestamps, identity/browser outcomes and `liveAcceptancePassed`. A successful local or alternate preview is explicitly `scope: "preview"` with `liveAcceptancePassed: false`. The production URL cannot be accepted using a feature-branch expectation. The checker always records `publicationPerformed: false`: it checks an existing deployment and never publishes one. Even a live frontend pass remains backend-intercepted, with real AI unverified. Capture the owner's actual Lovable publication/deployment record separately before closing #13.
+
+Use `--report path/to/new-report.json` for an explicit output path. Existing reports are never overwritten; choose a new path for each attempt. The default path contains scope, expected source SHA and a timestamp. Reports omit raw backend/transport diagnostics and unrelated manifest fields. Files are generated evidence, not committed source. Invalid CLI/source/URL configuration does not create a successful receipt.
+
+`npm run smoke:build` writes the same receipt for the local production preview. CI uploads `acceptance-reports/*.json` as `acceptance-SHA` with an always-run upload step, preserving a failed receipt when the acceptance harness runs. Earlier setup failures may produce no receipt; absence is never success. The tested `dist/` artifact is still uploaded only after successful checks.
+
+On November 17, 2026 the live receipt failed identity verification because no valid build identity was available, so the browser stage was not run. No fresh full live UI acceptance or publication is claimed. Issue #13 remains open until an authorized owner publishes the intended Lovable build, records its source/deployment identity and passes the actual live acceptance flow.

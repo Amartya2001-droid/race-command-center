@@ -80,3 +80,9 @@ Publication is still blocked: the environment allows the demo URL but denies `lo
 The live verifier parses HTML and requires exactly one named build meta tag in the active head and actual same-origin module-script entrypoints. Comments, templates, script strings and preload links cannot satisfy those checks. URL resolution respects the first HTML base element; real Lovable project links are checked separately from inert text. Regression fixtures cover false-positive HTML alongside normal attribute/URL variants. Source and asset digest checks remain in place.
 
 No Day 7 publication or live acceptance result is claimed. The Cloud executor failed to provision, so validation for this slice is performed by GitHub branch CI before opening the PR. The November 15 live observation above remains the last direct environment inspection; issue #13 stays open until an owner publishes in Lovable and the live checks pass. No alternate hosting site was created, and AI remains mock-backed.
+
+## Acceptance evidence
+
+The rollout smoke commands now save versioned JSON receipts in ignored `acceptance-reports/`, including failure/skip stages and completed checks. Preview success is explicitly distinguished from a live acceptance pass; no receipt claims the command published anything or validated real AI. CI retains receipts even on acceptance failures. See [receipt fields and operator commands](docs/deployment-rollout.md#acceptance-receipts-day-8).
+
+The November 17 live identity check failed and its browser stage was not run. Publication is still owner-controlled and blocked here; #13 remains open. The dated full frontend observation above is not replaced by this narrower gate check.
