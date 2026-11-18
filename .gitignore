@@ -29,3 +29,6 @@ dist-ssr
 
 # Generated test coverage
 coverage/
+
+# Generated acceptance evidence
+acceptance-reports/
