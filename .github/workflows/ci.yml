@@ -16,6 +16,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - run: npm run accept:live -- --help
       - run: npm test
       - run: npm run test:ai
       - run: npm run build

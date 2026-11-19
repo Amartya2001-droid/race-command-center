@@ -69,6 +69,16 @@ A legitimate server-side `OPENAI_API_KEY` would enable real completion calls and
 
 Late responses after polling is disabled are ignored, and malformed backend predictions are rejected before rendering. Amartya still needs to enter the legitimate key himself into the server environment; no stored key is read back, copied or committed by this work. Real provider authentication, quota/model access, response quality and deployed integration remain unverified until legitimate configuration and deployment are available.
 
+## Owner acceptance command
+
+After an authorized owner publishes the intended main build, run:
+
+```sh
+npm run accept:live -- --url "https://telemetry-racer-ace.lovable.app" --expected-sha "FULL_PUBLISHED_MAIN_SHA"
+```
+
+Supply the actual full published SHA. The command checks the marker/assets and frontend acceptance gates, saves a JSON report, and exits 0 only for a complete live frontend pass. It never publishes or merges, offers no key flag, and uses backend interception so real AI remains unverified. See [owner setup, exit codes and evidence handoff](docs/owner-live-check.md). The November 19 owner-command check failed build identity and skipped browser acceptance. Publication is still blocked here and #13 stays open until an owner publishes and live acceptance passes.
+
 ## Deployment parity and rollout
 
 The intended repository/`main`/Lovable project/live URL mapping is in `config/deployment.json`. Builds include a source identity footer and `build-identity.json` with allowlisted metadata and asset digests. CI verifies the built artifact, runs a backend-isolated Chromium control/recording/triage smoke, and uploads the passing reference artifact. `npm run verify:deployment -- --expected-sha FULL_DEPLOYED_SHA` detects stale or misaligned live builds; `npm run smoke:deployment -- --expected-sha FULL_DEPLOYED_SHA` then exercises the rollout checklist with no real AI calls.

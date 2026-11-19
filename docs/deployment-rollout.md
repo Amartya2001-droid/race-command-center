@@ -27,11 +27,10 @@ Git is the primary evidence. Detached CI builds use the documented GitHub event 
 3. Merge the reviewed deployment-parity PR through GitHub. Confirm main's CI, artifact verification and browser smoke are green. Record the full resulting main SHA, rather than using a feature-branch or pre-merge SHA.
 4. Confirm the project imports/builds that source revision. Its production build must have verifiable Git source identity. If the host strips Git or its source integration differs, resolve that platform-specific provenance mapping before treating the rollout as verified. Build command: `npm run build`; output directory: `dist`.
 5. Publish/update the **existing** Lovable project and URL. Record the successful deployment/publication identity and timestamp from the platform. No separate site, domain or audience change is required by this fix.
-6. From this repo, after fetching current main, run the gates using the exact intended deployed SHA:
+6. Follow the [owner live-check guide](owner-live-check.md). From this repo, run the owner command using the exact published main SHA:
 
    ```sh
-   npm run verify:deployment -- --expected-sha FULL_DEPLOYED_SHA
-   npm run smoke:deployment -- --expected-sha FULL_DEPLOYED_SHA
+   npm run accept:live -- --url "https://telemetry-racer-ace.lovable.app" --expected-sha FULL_DEPLOYED_SHA
    ```
 
    Replace `FULL_DEPLOYED_SHA` with the actual 40-character SHA; it is not a credential. Install the runner's Chromium with `npx playwright install chromium` if needed. On this managed Cloud image, the existing Chromium can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium`.
