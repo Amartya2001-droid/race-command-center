@@ -96,3 +96,7 @@ No Day 7 publication or live acceptance result is claimed. The Cloud executor fa
 The rollout smoke commands now save versioned JSON receipts in ignored `acceptance-reports/`, including failure/skip stages and completed checks. Preview success is explicitly distinguished from a live acceptance pass; no receipt claims the command published anything or validated real AI. CI retains receipts even on acceptance failures. See [receipt fields and operator commands](docs/deployment-rollout.md#acceptance-receipts-day-8).
 
 The November 17 live identity check failed and its browser stage was not run. Publication is still owner-controlled and blocked here; #13 remains open. The dated full frontend observation above is not replaced by this narrower gate check.
+
+## Day 10 — November 25 publish attempt
+
+Publishing was requested from this environment for `main` at `e7f7677`; the platform scheduled the deployment to https://telemetry-racer-ace.lovable.app, but when the URL was checked afterwards it still served the previous build (template title, no `build-identity.json`), so no live acceptance pass is claimed and #13 stays open. Locally `npm run build` with `npm run verify:build` passed on a clean checkout, and `npm run smoke:build` passed identity plus the full frontend checklist. Builds no longer fail when Git's current branch cannot be read with `git symbolic-ref`: the checked-out branch name is used, and a non-GitHub origin falls back to the repository declared in `config/deployment.json`.
