@@ -5,7 +5,7 @@ import { verifyDeployment } from './deployment.mjs';
 const contract = JSON.parse(readFileSync(new URL('../config/deployment.json', import.meta.url), 'utf8'));
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 let branch;
-try { branch = git('symbolic-ref', '--short', 'HEAD'); }
+try { branch = git('branch', '--show-current') || git('symbolic-ref', '--short', 'HEAD'); }
 catch { branch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME; }
 const root = resolve('dist');
 const result = await verifyDeployment('http://localhost', {

@@ -41,3 +41,20 @@ test('detached CI builds identify their documented event branch and actual commi
   vi.stubEnv('GITHUB_HEAD_REF', 'feature/test');
   expect(identity()).toMatchObject({ branch: 'feature/test', commit: 'a'.repeat(40) });
 });
+test('the current branch is read from the checked-out branch name', () => {
+  const previous = exec.getMockImplementation()!;
+  exec.mockImplementation((command: string, args: string[]) => {
+    if (args[0] === 'branch') return 'release/2026-11';
+    if (args[0] === 'symbolic-ref') throw new Error('not allowed');
+    return previous(command, args);
+  });
+  expect(identity()).toMatchObject({ branch: 'release/2026-11', commit: 'a'.repeat(40) });
+});
+test('a non-GitHub origin uses the repository declared in the committed contract', () => {
+  const previous = exec.getMockImplementation()!;
+  exec.mockImplementation((command: string, args: string[]) => {
+    if (args[0] === 'remote') return 'https://token@git.private.lovable-gcp.code.storage/ee396a16-ffbe-4818-8cb3-9dd90a7d5f10.git';
+    return previous(command, args);
+  });
+  expect(identity()).toMatchObject({ repository: 'Amartya2001-droid/race-command-center', branch: 'main', dirty: false });
+});

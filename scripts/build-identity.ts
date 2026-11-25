@@ -8,16 +8,21 @@ function git(...args: string[]) {
   try { return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
   catch { return undefined; }
 }
+// Detached CI checkouts have no current branch, so the documented GitHub event
+// ref is used rather than inventing one.
+function currentBranch() {
+  return git('branch', '--show-current') || git('symbolic-ref', '--short', 'HEAD') || undefined;
+}
 export function buildIdentityPlugin(): Plugin {
   const contract = JSON.parse(readFileSync(new URL('../config/deployment.json', import.meta.url), 'utf8')) as DeploymentContract;
   const gitCommit = git('rev-parse', 'HEAD');
-  const gitBranch = git('symbolic-ref', '--short', 'HEAD');
+  const gitBranch = currentBranch();
   const remote = git('remote', 'get-url', 'origin');
   const repository = remote?.match(/github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/)?.[1];
   // Only public source metadata is read from these allowlisted variables.
   const commit = gitCommit ?? process.env.DEPLOY_COMMIT_SHA;
   const branch = gitBranch ?? process.env.DEPLOY_SOURCE_BRANCH ?? process.env.GITHUB_HEAD_REF ?? process.env.GITHUB_REF_NAME;
-  const sourceRepository = repository ?? process.env.DEPLOY_SOURCE_REPOSITORY;
+  const sourceRepository = repository ?? process.env.DEPLOY_SOURCE_REPOSITORY ?? contract.repository;
   if (gitCommit && process.env.DEPLOY_COMMIT_SHA && gitCommit !== process.env.DEPLOY_COMMIT_SHA) throw new Error('DEPLOY_COMMIT_SHA disagrees with checked-out Git source');
   if (gitBranch && process.env.DEPLOY_SOURCE_BRANCH && gitBranch !== process.env.DEPLOY_SOURCE_BRANCH) throw new Error('DEPLOY_SOURCE_BRANCH disagrees with checked-out Git source');
   if (repository && process.env.DEPLOY_SOURCE_REPOSITORY && repository !== process.env.DEPLOY_SOURCE_REPOSITORY) throw new Error('DEPLOY_SOURCE_REPOSITORY disagrees with Git origin');
