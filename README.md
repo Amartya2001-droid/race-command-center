@@ -38,6 +38,8 @@ npm run build
 
 GitHub Actions runs these checks after `npm ci` on every push and pull request with Node.js 22. Tests cover dashboard rendering/navigation, missing backend configuration, and polling during telemetry updates. Mocked Node tests also exercise the edge handler, its telemetry prompts, success/error paths and missing server key. The Deno startup/deployment and real OpenAI integration are not validated by these tests.
 
+The full `npm test` suite also checks preview-auth storage with an isolated mock editor: host/origin routing, matching replies, timeout/retry, logout, concurrent session changes, and blocked/full local storage. These tests make no network calls and do not validate a real Lovable editor session. This storage module is outside the eight-module AI coverage gate.
+
 ## Session controls
 
 - Fullscreen toggles the browser Fullscreen API, follows Escape/browser exits and reports unsupported or denied requests.
